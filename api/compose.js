@@ -69,6 +69,75 @@ MUSIQUE :
       }),
     });
 
+    // Lire la réponse en texte brut d'abord
+    const text = await response.text();
+
+    // Si le statut HTTP est une erreur, renvoyer le message
+    if (!response.ok) {
+      return res.status(500).json({ error: `Groq error ${response.status}: ${text.slice(0, 200)}` });
+    }
+
+    // Parser le JSON de la réponse Groq
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      return res.status(500).json({ error: `Réponse Groq invalide: ${text.slice(0, 200)}` });
+    }
+
+    if (data.error) return res.status(500).json({ error: data.error.message });
+    if (!data.choices?.[0]?.message?.content) {
+      return res.status(500).json({ error: "Réponse vide de Groq" });
+    }
+
+    const raw = data.choices[0].message.content.replace(/```json\n?|```/g, "").trim();
+
+    let composition;
+    try {
+      composition = JSON.parse(raw);
+    } catch (e) {
+      return res.status(500).json({ error: `JSON composition invalide: ${raw.slice(0, 200)}` });
+    }
+
+    return res.status(200).json(composition);
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+}
+
+TIMBRE (sons organiques uniquement) :
+- melodyOsc: "fatsine" (voix/chaleur) | "fattriangle" (flute/douceur) | "fatquad" (cordes frottées)
+- padOsc: "fattriangle" (cordes) | "fatsine" (orgue doux) | "fatquad" (violoncelle)
+- melodyCount/padCount: 2-4 oscillateurs superposés
+- vibratoDepth: 0.04-0.12, chorusDepth: 0.3-0.6
+
+MUSIQUE :
+- 8 mesures 4/4, 4 accords de 2 mesures chacun
+- Melody: 24-32 notes, bar 0-7, beat 0-3, dur: "4n","8n","2n","4n."
+- tristesse/peur: bpm 45-70, mineur, reverbWet 0.75-0.85
+- nostalgie/amour: bpm 65-90, melodyOsc "fatquad"
+- serenite: bpm 70-95, majeur, melodyOsc "fattriangle"
+- joie: bpm 110-145, majeur
+- colere: bpm 100-140, mineur
+- Phrases expressives avec respirations et silences`;
+
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        max_tokens: 2500,
+        messages: [
+          { role: "system", content: PROMPT },
+          { role: "user", content: `Compose pour : "${emotion}"` }
+        ],
+      }),
+    });
+
     const data = await response.json();
     if (data.error) return res.status(500).json({ error: data.error.message });
 
