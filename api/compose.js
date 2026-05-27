@@ -123,35 +123,71 @@ export default async function handler(req, res) {
     },
   };
 
-  const detectCategory = (text) => {
-    const t = text.toLowerCase();
-    if (/triste|pleur|deuil|perd|larme|mélanc|chagrin|douleur/.test(t)) return "tristesse";
-    if (/joie|heureux|bonheur|rire|fête|content|euphor|exalt/.test(t)) return "joie";
-    if (/colère|rage|furieux|énerv|fruste|revolt|indigna/.test(t)) return "colere";
-    if (/peur|anxieux|angoisse|stress|effroi|crainte|terreur/.test(t)) return "peur";
-    if (/sérén|calme|paisib|tranquil|zen|apais|repos/.test(t)) return "serenite";
-    if (/amour|aime|tendress|passion|romantique|coeur/.test(t)) return "amour";
-    if (/nostalg|souvenir|passé|enfance|autrefois|lointain/.test(t)) return "nostalgie";
-    return "neutre";
+  const SCORES = {
+    tristesse: { pattern:/triste|pleur|deuil|perd|larme|mélanc|chagrin|douleur|brisé|vide/, weight:1 },
+    joie:      { pattern:/joie|heureux|bonheur|rire|fête|content|euphor|exalt|ravi|éclat/, weight:1 },
+    colere:    { pattern:/colère|rage|furieux|énerv|fruste|revolt|indigna|cri|fracas/, weight:1 },
+    peur:      { pattern:/peur|anxieux|angoisse|stress|effroi|crainte|terreur|tremble/, weight:1 },
+    serenite:  { pattern:/sérén|calme|paisib|tranquil|zen|apais|repos|doux|silence/, weight:1 },
+    amour:     { pattern:/amour|aime|tendress|passion|romantique|coeur|désir|manque/, weight:1 },
+    nostalgie: { pattern:/nostalg|souvenir|passé|enfance|autrefois|lointain|jadis|déjà/, weight:1 },
   };
 
-  const ALL_SCALES = { ...MAJOR_SCALES, ...MINOR_SCALES };
   const POSITIVE = ["joie","serenite","amour"];
+  const ALL_SCALES = { ...MAJOR_SCALES, ...MINOR_SCALES };
 
-  const cat     = detectCategory(emotion);
-  const palette = ALL_SCALES[cat] || MINOR_SCALES.neutre;
-  const key     = pick(palette.keys);
-  const mood    = pick(palette.mood);
-  const bpm     = palette.bpm();
+  // Détecte toutes les émotions présentes et leur score
+  const detectEmotions = (text) => {
+    const t = text.toLowerCase();
+    const found = [];
+    for (const [cat, { pattern }] of Object.entries(SCORES)) {
+      const matches = t.match(new RegExp(pattern.source, "g")) || [];
+      if (matches.length > 0) found.push({ cat, score: matches.length });
+    }
+    found.sort((a, b) => b.score - a.score);
+    return found;
+  };
+
+  // Fusionne deux palettes pour les émotions mixtes
+  const mergePalettes = (p1, p2) => ({
+    keys: [...p1.keys, ...p2.keys],
+    bpm: () => +(( p1.bpm() + p2.bpm()) / 2).toFixed(0),
+    reverbWet: () => +((p1.reverbWet() + p2.reverbWet()) / 2).toFixed(3),
+    verseLen: [
+      Math.round((p1.verseLen[0] + p2.verseLen[0]) / 2),
+      Math.round((p1.verseLen[1] + p2.verseLen[1]) / 2),
+    ],
+    durations: [...new Set([...p1.durations, ...p2.durations])],
+    mood: [...p1.mood, ...p2.mood],
+  });
+
+  const emotions = detectEmotions(emotion);
+  const primary   = emotions[0]?.cat || "neutre";
+  const secondary = emotions[1]?.cat;
+  const isMixed   = !!secondary && secondary !== primary;
+
+  const p1 = ALL_SCALES[primary] || MINOR_SCALES.neutre;
+  const p2 = secondary ? (ALL_SCALES[secondary] || MINOR_SCALES.neutre) : null;
+  const palette = isMixed ? mergePalettes(p1, p2) : p1;
+
+  // Mode : mixte = mineur si une émotion est négative, sinon majeur
+  const isPositivePrimary   = POSITIVE.includes(primary);
+  const isPositiveSecondary = secondary ? POSITIVE.includes(secondary) : true;
+  const isPositive = isMixed ? (isPositivePrimary && isPositiveSecondary) : isPositivePrimary;
+
+  const cat       = primary;
+  const mixLabel  = isMixed ? `${primary}+${secondary}` : primary;
+  const key       = pick(palette.keys);
+  const mood      = pick(palette.mood);
+  const bpm       = palette.bpm();
   const reverbWet = palette.reverbWet();
-  const isPositive = POSITIVE.includes(cat);
   const [minLen, maxLen] = palette.verseLen;
 
   const PROMPT = `Tu es un compositeur. Génère 2 verses mélodiques qui capturent une émotion.
 RÉPONDS UNIQUEMENT AVEC DU JSON VALIDE. Pas de markdown. Seed: ${seed}.
 
 {
-  "category": "${cat}",
+  "category": "${mixLabel}",
   "mode": "${isPositive ? "majeur" : "mineur"}",
   "key": "${key.root}",
   "title": "titre poétique en français (2-4 mots)",
