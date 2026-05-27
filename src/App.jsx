@@ -7,6 +7,17 @@ const STORAGE_KEY = "emotion-music-count";
 // ↓ Remplace par ton lien Stripe
 const STRIPE_LINK = "https://buy.stripe.com/00w14g0BP99lcwydDQ2Ji0m";
 
+// Code secret admin — change "MONCODE" par ce que tu veux
+const ADMIN_CODE = "demotion360";
+const ADMIN_KEY  = "emotion-music-admin";
+
+function isAdmin() {
+  try { return localStorage.getItem(ADMIN_KEY) === "1"; } catch { return false; }
+}
+function setAdmin() {
+  try { localStorage.setItem(ADMIN_KEY, "1"); } catch {}
+}
+
 const PAL = {
   tristesse: { bg:"#07101d", mid:"#0d2137", accent:"#4a90d9", glow:"74,144,217", text:"#93c5fd", sub:"rgba(74,144,217,0.08)" },
   joie:      { bg:"#110d00", mid:"#241a00", accent:"#f59e0b", glow:"245,158,11", text:"#fde68a", sub:"rgba(245,158,11,0.08)" },
@@ -110,7 +121,16 @@ export default function App() {
 
   const generate = async () => {
     if (!input.trim()) return;
-    if (useCount >= FREE_LIMIT) { setPhase("paywall"); return; }
+
+    // Activation mode admin
+    if (input.trim() === ADMIN_CODE) {
+      setAdmin();
+      setInput("");
+      setError("✓ Mode admin activé — compositions illimitées.");
+      return;
+    }
+
+    if (useCount >= FREE_LIMIT && !isAdmin()) { setPhase("paywall"); return; }
     setPhase("loading");
     setError(null);
     try {
