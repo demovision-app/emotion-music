@@ -4,12 +4,17 @@ import * as Tone from "tone";
 const FREE_LIMIT = 3;
 const STORAGE_KEY = "emotion-music-count";
 
+// ↓ Remplace par ton lien Stripe
+const STRIPE_LINK = "https://buy.stripe.com/XXXXXXXX";
+
 const PAL = {
   tristesse: { bg:"#07101d", mid:"#0d2137", accent:"#4a90d9", glow:"74,144,217", text:"#93c5fd", sub:"rgba(74,144,217,0.08)" },
   joie:      { bg:"#110d00", mid:"#241a00", accent:"#f59e0b", glow:"245,158,11", text:"#fde68a", sub:"rgba(245,158,11,0.08)" },
-  colère:    { bg:"#130202", mid:"#2a0606", accent:"#ef4444", glow:"239,68,68",  text:"#fca5a5", sub:"rgba(239,68,68,0.08)" },
+  "colère":  { bg:"#130202", mid:"#2a0606", accent:"#ef4444", glow:"239,68,68",  text:"#fca5a5", sub:"rgba(239,68,68,0.08)" },
+  colere:    { bg:"#130202", mid:"#2a0606", accent:"#ef4444", glow:"239,68,68",  text:"#fca5a5", sub:"rgba(239,68,68,0.08)" },
   peur:      { bg:"#080511", mid:"#150f28", accent:"#8b5cf6", glow:"139,92,246", text:"#c4b5fd", sub:"rgba(139,92,246,0.08)" },
-  sérénité:  { bg:"#010e07", mid:"#021a0d", accent:"#10b981", glow:"16,185,129", text:"#6ee7b7", sub:"rgba(16,185,129,0.08)" },
+  "sérénité":{ bg:"#010e07", mid:"#021a0d", accent:"#10b981", glow:"16,185,129", text:"#6ee7b7", sub:"rgba(16,185,129,0.08)" },
+  serenite:  { bg:"#010e07", mid:"#021a0d", accent:"#10b981", glow:"16,185,129", text:"#6ee7b7", sub:"rgba(16,185,129,0.08)" },
   amour:     { bg:"#11020b", mid:"#260618", accent:"#ec4899", glow:"236,72,153", text:"#f9a8d4", sub:"rgba(236,72,153,0.08)" },
   nostalgie: { bg:"#0f0700", mid:"#211200", accent:"#d97706", glow:"217,119,6",  text:"#fcd34d", sub:"rgba(217,119,6,0.08)" },
   neutre:    { bg:"#0b0b14", mid:"#141424", accent:"#818cf8", glow:"129,140,248",text:"#c7d2fe", sub:"rgba(129,140,248,0.08)" },
@@ -28,66 +33,56 @@ function Paywall({ pal: p }) {
     fontFamily:"Georgia,serif", fontSize:"1rem", letterSpacing:"0.1em",
     padding:"0.75rem 2.5rem", cursor:"pointer", fontWeight:600,
   };
-  const ghost = {
-    background:"transparent", border:`1px solid rgba(${p.glow},0.4)`,
-    color:`rgba(${p.glow},0.7)`, borderRadius:3,
-    fontFamily:"Georgia,serif", fontSize:"0.8rem",
-    letterSpacing:"0.12em", padding:"0.5rem 1.5rem", cursor:"pointer",
-  };
   return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:"1.4rem", maxWidth:420, textAlign:"center" }}>
-      <div style={{ fontSize:"2.8rem" }}>✦</div>
+      <div style={{ fontSize:"2.8rem", lineHeight:1 }}>🎵</div>
       <h2 style={{ fontSize:"1.6rem", fontWeight:300, letterSpacing:"0.04em", margin:0, color:p.text }}>
-        Tes {FREE_LIMIT} compositions gratuites sont épuisées
+        Tu as vidé ton quota gratuit
       </h2>
-      <p style={{ fontSize:"0.95rem", fontStyle:"italic", opacity:0.65, lineHeight:1.8, margin:0, color:p.text }}>
-        Continue à composer sans limite.
+      <p style={{ fontSize:"1.05rem", fontStyle:"italic", opacity:0.75, lineHeight:1.9, margin:0, color:p.text }}>
+        Tu as eu droit à {FREE_LIMIT} émotions.<br />
+        Il t'en reste encore combien à exprimer ?
       </p>
-      <div style={{ display:"flex", flexDirection:"column", gap:"0.6rem", width:"100%",
-        background:`rgba(${p.glow},0.06)`, border:`1px solid rgba(${p.glow},0.2)`,
-        borderRadius:4, padding:"1.2rem 1.5rem" }}>
-        {["Compositions illimitées","Qualité audio haute fidélité","Historique de tes pièces","Export MP3 (bientôt)"].map(feat => (
-          <div key={feat} style={{ display:"flex", alignItems:"center", gap:"0.7rem", fontSize:"0.9rem", color:p.text, opacity:0.85 }}>
-            <span style={{ color:p.accent, fontSize:"0.7rem" }}>◆</span>{feat}
-          </div>
-        ))}
-        <div style={{ borderTop:`1px solid rgba(${p.glow},0.2)`, marginTop:"0.8rem", paddingTop:"0.9rem",
-          display:"flex", justifyContent:"space-between", alignItems:"baseline" }}>
-          <span style={{ color:p.text, opacity:0.6, fontSize:"0.8rem", letterSpacing:"0.1em", textTransform:"uppercase" }}>Accès illimité</span>
-          <span style={{ color:p.accent, fontSize:"1.4rem", fontWeight:300 }}>4,99 €<span style={{ fontSize:"0.75rem", opacity:0.6 }}>/mois</span></span>
+      <div style={{ background:`rgba(${p.glow},0.06)`, border:`1px solid rgba(${p.glow},0.2)`,
+        borderRadius:4, padding:"1.2rem 1.5rem", width:"100%" }}>
+        <p style={{ margin:0, fontSize:"0.95rem", color:p.text, opacity:0.8, lineHeight:1.8, fontStyle:"italic" }}>
+          Pour 4,99 €/mois, compose autant que tu veux —<br />
+          joie, tristesse, rage, amour, et tout ce qu'il y a entre les deux.
+        </p>
+        <div style={{ borderTop:`1px solid rgba(${p.glow},0.2)`, marginTop:"0.9rem", paddingTop:"0.9rem",
+          display:"flex", justifyContent:"center", alignItems:"baseline", gap:"0.4rem" }}>
+          <span style={{ color:p.accent, fontSize:"1.6rem", fontWeight:300 }}>4,99 €</span>
+          <span style={{ color:p.text, opacity:0.5, fontSize:"0.8rem" }}>/mois</span>
         </div>
       </div>
-      <button style={btn} onClick={() => window.open("https://ton-lien-stripe.com", "_blank")}>
-        Commencer — 4,99 €/mois
+      <button style={btn} onClick={() => window.open(STRIPE_LINK, "_blank")}>
+        Continuer à composer
       </button>
-      <button style={ghost} onClick={() => window.open("https://ton-lien-essai.com", "_blank")}>
-        Essai 7 jours gratuit
-      </button>
-      <p style={{ fontSize:"0.7rem", opacity:0.35, fontFamily:"monospace", letterSpacing:"0.1em", textTransform:"uppercase", margin:0, color:p.text }}>
-        Résiliation à tout moment · Paiement sécurisé
+      <p style={{ fontSize:"0.7rem", opacity:0.3, fontFamily:"monospace", letterSpacing:"0.1em", textTransform:"uppercase", margin:0, color:p.text }}>
+        Sans engagement · Résiliable à tout moment
       </p>
     </div>
   );
 }
 
 export default function App() {
-  const [input, setInput]       = useState("");
-  const [phase, setPhase]       = useState("input");
-  const [music, setMusic]       = useState(null);
-  const [pal, setPal]           = useState(PAL.neutre);
+  const [input, setInput]         = useState("");
+  const [phase, setPhase]         = useState("input");
+  const [music, setMusic]         = useState(null);
+  const [pal, setPal]             = useState(PAL.neutre);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [error, setError]       = useState(null);
-  const [dots, setDots]         = useState("");
-  const [useCount, setUseCount] = useState(() => getCount());
+  const [progress, setProgress]   = useState(0);
+  const [error, setError]         = useState(null);
+  const [dots, setDots]           = useState("");
+  const [useCount, setUseCount]   = useState(() => getCount());
 
-  const canvasRef  = useRef(null);
+  const canvasRef   = useRef(null);
   const analyzerRef = useRef(null);
-  const synthsRef  = useRef(null);
-  const animRef    = useRef(null);
-  const timerRef   = useRef(null);
-  const endRef     = useRef(null);
-  const playingRef = useRef(false);
+  const synthsRef   = useRef(null);
+  const animRef     = useRef(null);
+  const timerRef    = useRef(null);
+  const endRef      = useRef(null);
+  const playingRef  = useRef(false);
 
   useEffect(() => {
     if (phase !== "loading") return;
@@ -119,7 +114,6 @@ export default function App() {
     setPhase("loading");
     setError(null);
     try {
-      // Appel au backend Vercel — la clé API reste secrète côté serveur
       const res = await fetch("/api/compose", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,9 +137,9 @@ export default function App() {
     if (!music) return;
     stopAll();
     await Tone.start();
-    const bpm = music.bpm || 80;
-    const spb = 60 / bpm;
-    const spBar = spb * 4;
+    const bpm     = music.bpm || 80;
+    const spb     = 60 / bpm;
+    const spBar   = spb * 4;
     const totalDur = 8 * spBar;
 
     const reverb = new Tone.Reverb({ decay: music.reverbDecay || 4, wet: music.reverbWet || 0.65 });
@@ -197,7 +191,7 @@ export default function App() {
 
     const draw = () => {
       const canvas = canvasRef.current;
-      const ana = analyzerRef.current;
+      const ana    = analyzerRef.current;
       if (!canvas || !ana) return;
       const ctx = canvas.getContext("2d");
       const W = canvas.width, H = canvas.height;
@@ -225,24 +219,24 @@ export default function App() {
   const stop  = () => { stopAll(); setPhase("ready"); };
   const reset = () => { stopAll(); setPhase("input"); setMusic(null); setInput(""); setPal(PAL.neutre); };
 
-  const p = pal;
+  const p         = pal;
   const remaining = Math.max(0, FREE_LIMIT - useCount);
   const S = {
-    root: { minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
-      background:`radial-gradient(ellipse 90% 70% at 50% 50%, ${p.mid} 0%, ${p.bg} 70%)`,
-      transition:"background 1.6s ease", padding:"2rem",
-      fontFamily:"Georgia,'Times New Roman',serif", color:p.text },
-    title: { fontSize:"clamp(1.5rem,4vw,2.2rem)", fontWeight:300, letterSpacing:"0.03em", textAlign:"center", lineHeight:1.3, marginBottom:"0.5rem" },
+    root:     { minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+                background:`radial-gradient(ellipse 90% 70% at 50% 50%, ${p.mid} 0%, ${p.bg} 70%)`,
+                transition:"background 1.6s ease", padding:"2rem",
+                fontFamily:"Georgia,'Times New Roman',serif", color:p.text },
+    title:    { fontSize:"clamp(1.5rem,4vw,2.2rem)", fontWeight:300, letterSpacing:"0.03em", textAlign:"center", lineHeight:1.3, marginBottom:"0.5rem" },
     textarea: { width:"100%", maxWidth:480, background:p.sub, border:`1px solid rgba(${p.glow},0.35)`,
-      borderRadius:3, color:p.text, fontFamily:"Georgia,serif", fontSize:"1.05rem",
-      padding:"0.85rem 1.1rem", resize:"none", outline:"none", lineHeight:1.7 },
-    btn: { background:"transparent", border:`1px solid rgba(${p.glow},0.5)`, color:p.accent,
-      fontFamily:"Georgia,serif", fontSize:"0.9rem", letterSpacing:"0.14em",
-      padding:"0.6rem 2rem", cursor:"pointer", textTransform:"uppercase" },
-    tag: { fontFamily:"monospace", fontSize:"0.65rem", letterSpacing:"0.18em", color:`rgba(${p.glow},0.6)`, textTransform:"uppercase" },
-    waveBox: { width:"100%", maxWidth:500, height:90, background:p.sub, border:`1px solid rgba(${p.glow},0.15)`, borderRadius:3, overflow:"hidden" },
-    track: { width:"100%", maxWidth:500, height:1, background:`rgba(${p.glow},0.2)`, margin:"1.2rem 0" },
-    fill:  { height:"100%", background:p.accent, boxShadow:`0 0 6px rgba(${p.glow},0.8)`, transition:"width 0.12s linear" },
+                borderRadius:3, color:p.text, fontFamily:"Georgia,serif", fontSize:"1.05rem",
+                padding:"0.85rem 1.1rem", resize:"none", outline:"none", lineHeight:1.7 },
+    btn:      { background:"transparent", border:`1px solid rgba(${p.glow},0.5)`, color:p.accent,
+                fontFamily:"Georgia,serif", fontSize:"0.9rem", letterSpacing:"0.14em",
+                padding:"0.6rem 2rem", cursor:"pointer", textTransform:"uppercase" },
+    tag:      { fontFamily:"monospace", fontSize:"0.65rem", letterSpacing:"0.18em", color:`rgba(${p.glow},0.6)`, textTransform:"uppercase" },
+    waveBox:  { width:"100%", maxWidth:500, height:90, background:p.sub, border:`1px solid rgba(${p.glow},0.15)`, borderRadius:3, overflow:"hidden" },
+    track:    { width:"100%", maxWidth:500, height:1, background:`rgba(${p.glow},0.2)`, margin:"1.2rem 0" },
+    fill:     { height:"100%", background:p.accent, boxShadow:`0 0 6px rgba(${p.glow},0.8)`, transition:"width 0.12s linear" },
   };
 
   return (
@@ -251,7 +245,10 @@ export default function App() {
 
       {phase === "input" && (
         <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:"1.6rem", width:"100%", maxWidth:480 }}>
-          <h1 style={S.title}>Quelle émotion veux-tu<br /><span style={{ color:p.accent, fontStyle:"italic" }}>transmettre ?</span></h1>
+          <h1 style={S.title}>
+            Quelle émotion veux-tu<br />
+            <span style={{ color:p.accent, fontStyle:"italic" }}>transmettre ?</span>
+          </h1>
           <textarea rows={4} style={S.textarea}
             placeholder="Une joie soudaine, une nostalgie qui pèse, une colère qui cherche sa sortie..."
             value={input} onChange={e => setInput(e.target.value)}
@@ -285,7 +282,9 @@ export default function App() {
             <span style={S.tag}>·</span>
             <span style={{ ...S.tag, opacity:0.4 }}>{useCount}/{FREE_LIMIT}</span>
           </div>
-          <h2 style={{ ...S.title, fontSize:"clamp(1.7rem,5vw,2.6rem)", color:p.accent, marginBottom:"0.2rem" }}>{music.title}</h2>
+          <h2 style={{ ...S.title, fontSize:"clamp(1.7rem,5vw,2.6rem)", color:p.accent, marginBottom:"0.2rem" }}>
+            {music.title}
+          </h2>
           <p style={{ fontSize:"1rem", fontStyle:"italic", fontWeight:300, textAlign:"center", color:p.text, opacity:0.75, lineHeight:1.75, maxWidth:420, margin:"0 0 0.8rem" }}>
             {music.description}
           </p>
