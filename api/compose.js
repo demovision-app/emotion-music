@@ -9,160 +9,176 @@ export default async function handler(req, res) {
   const { emotion } = req.body;
   if (!emotion) return res.status(400).json({ error: "Emotion manquante" });
 
-  const PALETTES = {
-    tristesse: {
-      bpm:[48,58,65], reverbWet:[0.78,0.82,0.86],
-      melodyOsc:"fatsine", padOsc:"fattriangle",
-      melodyAttack:0.6, padAttack:2.2, vibratoDepth:0.10,
-      chordSets:[
-        [["D3","F3","A3"],["C3","Eb3","G3"],["Bb2","D3","F3"],["A2","C3","E3"]],
-        [["A2","C3","E3"],["G2","Bb2","D3"],["F2","Ab2","C3"],["E2","G2","B2"]],
-        [["E3","G3","B3"],["D3","F3","A3"],["C3","Eb3","G3"],["B2","D3","F3"]]
-      ],
-      notes:["D4","F4","A4","C5","Eb4","G4","Bb4","D5","E4","G4"]
-    },
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const rnd  = (min, max) => +(min + Math.random() * (max - min)).toFixed(3);
+  const seed = Math.floor(Math.random() * 99999);
+
+  // GAMMES MAJEURES — émotions positives
+  const MAJOR_SCALES = {
     joie: {
-      bpm:[118,128,138], reverbWet:[0.35,0.42,0.48],
-      melodyOsc:"fattriangle", padOsc:"fatsine",
-      melodyAttack:0.04, padAttack:1.0, vibratoDepth:0.04,
-      chordSets:[
-        [["C3","E3","G3"],["F3","A3","C4"],["G3","B3","D4"],["A3","C4","E4"]],
-        [["G3","B3","D4"],["C3","E3","G3"],["D3","F#3","A3"],["E3","G#3","B3"]],
-        [["F3","A3","C4"],["Bb3","D4","F4"],["C3","E3","G3"],["G3","B3","D4"]]
+      keys: [
+        { root:"C", notes:["C4","D4","E4","F4","G4","A4","B4","C5","D5","E5"] },
+        { root:"G", notes:["G3","A3","B3","C4","D4","E4","F#4","G4","A4","B4"] },
+        { root:"D", notes:["D4","E4","F#4","G4","A4","B4","C#5","D5","E5","F#5"] },
+        { root:"F", notes:["F3","G3","A3","Bb3","C4","D4","E4","F4","G4","A4"] },
       ],
-      notes:["C4","E4","G4","B4","D5","F#4","A4","C5","E5","G4"]
-    },
-    colere: {
-      bpm:[108,122,135], reverbWet:[0.30,0.38,0.45],
-      melodyOsc:"fatquad", padOsc:"fatquad",
-      melodyAttack:0.03, padAttack:0.8, vibratoDepth:0.12,
-      chordSets:[
-        [["A2","C3","E3"],["D3","F3","A3"],["G2","Bb2","D3"],["E3","G3","B3"]],
-        [["D3","F3","A3"],["G3","Bb3","D4"],["A2","C3","E3"],["E3","G3","B3"]],
-        [["E3","G3","B3"],["A2","C3","E3"],["D3","F3","A3"],["G2","Bb2","D3"]]
-      ],
-      notes:["A3","C4","E4","G4","D4","F4","Bb3","E4","B3","A4"]
-    },
-    peur: {
-      bpm:[50,60,68], reverbWet:[0.80,0.84,0.88],
-      melodyOsc:"fatsine", padOsc:"fattriangle",
-      melodyAttack:0.8, padAttack:2.5, vibratoDepth:0.09,
-      chordSets:[
-        [["B2","D3","F3"],["E3","G3","Bb3"],["A2","C3","Eb3"],["F#3","A3","C4"]],
-        [["C3","Eb3","Gb3"],["F2","Ab2","C3"],["Bb2","Db3","F3"],["G2","Bb2","Db3"]],
-        [["D3","F3","Ab3"],["G2","Bb2","Db3"],["C3","Eb3","G3"],["A2","C3","Eb3"]]
-      ],
-      notes:["B3","D4","F4","Ab4","E4","G4","Bb4","C#4","Eb4","B4"]
+      bpm: () => +rnd(116, 144).toFixed(0),
+      reverbWet: () => rnd(0.28, 0.44),
+      verseLen: [6, 10], // [min, max] notes par verse
+      durations: ["8n","8n","4n","8n","8n","4n.","8n","4n","8n","16n"],
+      mood: ["joyeux et bondissant","léger et lumineux","festif et entraînant","vif et radieux"],
     },
     serenite: {
-      bpm:[72,80,88], reverbWet:[0.52,0.58,0.64],
-      melodyOsc:"fattriangle", padOsc:"fatsine",
-      melodyAttack:0.2, padAttack:2.0, vibratoDepth:0.05,
-      chordSets:[
-        [["G3","B3","D4"],["C3","E3","G3"],["A3","C#4","E4"],["D3","F#3","A3"]],
-        [["C3","E3","G3"],["F3","A3","C4"],["G3","B3","D4"],["E3","G#3","B3"]],
-        [["A3","C#4","E4"],["D3","F#3","A3"],["G3","B3","D4"],["C3","E3","G3"]]
+      keys: [
+        { root:"G", notes:["G3","A3","B3","C4","D4","E4","F#4","G4","A4","B4"] },
+        { root:"A", notes:["A3","B3","C#4","D4","E4","F#4","G#4","A4","B4","C#5"] },
+        { root:"Eb", notes:["Eb4","F4","G4","Ab4","Bb4","C5","D5","Eb5","F5","G5"] },
+        { root:"C", notes:["C4","D4","E4","F4","G4","A4","B4","C5","D5","E5"] },
       ],
-      notes:["G4","B4","D5","F#4","A4","E4","C#4","G4","B3","D4"]
+      bpm: () => +rnd(66, 88).toFixed(0),
+      reverbWet: () => rnd(0.54, 0.70),
+      verseLen: [5, 9],
+      durations: ["2n","4n.","4n","2n","4n.","4n","2n.","4n","8n","2n"],
+      mood: ["paisible et fluide","contemplatif et doux","aérien et reposant","calme et pur"],
     },
     amour: {
-      bpm:[68,76,84], reverbWet:[0.62,0.68,0.72],
-      melodyOsc:"fatquad", padOsc:"fatsine",
-      melodyAttack:0.15, padAttack:1.8, vibratoDepth:0.07,
-      chordSets:[
-        [["F3","A3","C4"],["Bb3","D4","F4"],["C3","E3","G3"],["G3","B3","D4"]],
-        [["C3","E3","G3"],["Am3","C4","E4"],["F3","A3","C4"],["G3","B3","D4"]],
-        [["Eb3","G3","Bb3"],["Ab3","C4","Eb4"],["Bb3","D4","F4"],["F3","A3","C4"]]
+      keys: [
+        { root:"F", notes:["F3","G3","A3","Bb3","C4","D4","E4","F4","G4","A4"] },
+        { root:"Bb", notes:["Bb3","C4","D4","Eb4","F4","G4","A4","Bb4","C5","D5"] },
+        { root:"E", notes:["E3","F#3","G#3","A3","B3","C#4","D#4","E4","F#4","G#4"] },
+        { root:"Ab", notes:["Ab3","Bb3","C4","Db4","Eb4","F4","G4","Ab4","Bb4","C5"] },
       ],
-      notes:["F4","A4","C5","E4","G4","Bb4","D4","F5","C4","E4"]
+      bpm: () => +rnd(62, 84).toFixed(0),
+      reverbWet: () => rnd(0.62, 0.76),
+      verseLen: [7, 12],
+      durations: ["4n.","4n","2n","4n","4n.","8n","2n","4n","4n.","2n."],
+      mood: ["tendre et enveloppant","romantique et doux","intime et chaleureux","passionné et rêveur"],
     },
-    nostalgie: {
-      bpm:[66,74,82], reverbWet:[0.62,0.67,0.72],
-      melodyOsc:"fatquad", padOsc:"fattriangle",
-      melodyAttack:0.25, padAttack:2.0, vibratoDepth:0.08,
-      chordSets:[
-        [["A2","C3","E3"],["D3","F3","A3"],["G2","Bb2","D3"],["E3","G3","B3"]],
-        [["C3","E3","G3"],["Am2","C3","E3"],["F2","A2","C3"],["G2","B2","D3"]],
-        [["D3","F#3","A3"],["G3","B3","D4"],["E3","G3","B3"],["A2","C3","E3"]]
-      ],
-      notes:["A3","C4","E4","G4","D4","F4","B3","A4","F#4","C4"]
-    },
-    neutre: {
-      bpm:[80,90,100], reverbWet:[0.50,0.55,0.60],
-      melodyOsc:"fatsine", padOsc:"fattriangle",
-      melodyAttack:0.12, padAttack:1.5, vibratoDepth:0.06,
-      chordSets:[
-        [["C3","E3","G3"],["G3","B3","D4"],["A3","C4","E4"],["F3","A3","C4"]],
-        [["D3","F#3","A3"],["G3","B3","D4"],["A3","C#4","E4"],["E3","G#3","B3"]],
-        [["F3","A3","C4"],["C3","E3","G3"],["Bb3","D4","F4"],["G3","B3","D4"]]
-      ],
-      notes:["C4","E4","G4","B4","D4","F4","A4","C5","G4","E4"]
-    }
   };
 
-  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  // GAMMES MINEURES — émotions négatives
+  const MINOR_SCALES = {
+    tristesse: {
+      keys: [
+        { root:"Dm", notes:["D4","E4","F4","G4","A4","Bb4","C5","D5","E5","F5"] },
+        { root:"Am", notes:["A3","B3","C4","D4","E4","F4","G4","A4","B4","C5"] },
+        { root:"Em", notes:["E3","F#3","G3","A3","B3","C4","D4","E4","F#4","G4"] },
+        { root:"Bm", notes:["B3","C#4","D4","E4","F#4","G4","A4","B4","C#5","D5"] },
+      ],
+      bpm: () => +rnd(44, 66).toFixed(0),
+      reverbWet: () => rnd(0.76, 0.90),
+      verseLen: [8, 14],
+      durations: ["2n","4n.","4n","2n.","4n","8n","4n.","2n","4n","1n"],
+      mood: ["mélancolique et lent","douloureux et intime","sombre et profond","brisé et fragile"],
+    },
+    colere: {
+      keys: [
+        { root:"Am", notes:["A3","B3","C4","D4","E4","F4","G4","A4","B4","C5"] },
+        { root:"Dm", notes:["D3","E3","F3","G3","A3","Bb3","C4","D4","E4","F4"] },
+        { root:"Gm", notes:["G3","A3","Bb3","C4","D4","Eb4","F4","G4","A4","Bb4"] },
+        { root:"Cm", notes:["C3","D3","Eb3","F3","G3","Ab3","Bb3","C4","D4","Eb4"] },
+      ],
+      bpm: () => +rnd(108, 140).toFixed(0),
+      reverbWet: () => rnd(0.24, 0.40),
+      verseLen: [6, 10],
+      durations: ["8n","8n","8n","4n","8n","8n","4n","16n","8n","4n"],
+      mood: ["violent et haché","tendu et explosif","rageur et saccadé","brutal et urgent"],
+    },
+    peur: {
+      keys: [
+        { root:"Bm", notes:["B3","C#4","D4","E4","F#4","G4","A4","B4","C#5","D5"] },
+        { root:"F#m", notes:["F#3","G#3","A3","B3","C#4","D4","E4","F#4","G#4","A4"] },
+        { root:"Cm", notes:["C4","D4","Eb4","F4","G4","Ab4","Bb4","C5","D5","Eb5"] },
+        { root:"Gm", notes:["G3","A3","Bb3","C4","D4","Eb4","F4","G4","A4","Bb4"] },
+      ],
+      bpm: () => +rnd(46, 68).toFixed(0),
+      reverbWet: () => rnd(0.80, 0.93),
+      verseLen: [7, 11],
+      durations: ["4n.","8n","2n","4n","8n","4n.","2n","4n","8n","2n."],
+      mood: ["angoissant et suspendu","tremblant et instable","glacial et oppressant","sombre et menaçant"],
+    },
+    nostalgie: {
+      keys: [
+        { root:"Am", notes:["A3","B3","C4","D4","E4","F4","G4","A4","B4","C5"] },
+        { root:"Em", notes:["E3","F#3","G3","A3","B3","C4","D4","E4","F#4","G4"] },
+        { root:"Dm", notes:["D3","E3","F3","G3","A3","Bb3","C4","D4","E4","F4"] },
+        { root:"Bm", notes:["B3","C#4","D4","E4","F#4","G4","A4","B4","C#5","D5"] },
+      ],
+      bpm: () => +rnd(60, 82).toFixed(0),
+      reverbWet: () => rnd(0.64, 0.78),
+      verseLen: [8, 13],
+      durations: ["4n.","4n","2n","8n","4n","4n.","2n","4n","2n.","4n"],
+      mood: ["nostalgique et lointain","doux-amer et rêveur","évocateur et flottant","mélancolique et tendre"],
+    },
+    neutre: {
+      keys: [
+        { root:"Am", notes:["A3","B3","C4","D4","E4","F4","G4","A4","B4","C5"] },
+        { root:"C",  notes:["C4","D4","E4","F4","G4","A4","B4","C5","D5","E5"] },
+      ],
+      bpm: () => +rnd(76, 100).toFixed(0),
+      reverbWet: () => rnd(0.48, 0.64),
+      verseLen: [6, 10],
+      durations: ["4n","8n","4n.","4n","8n","2n","4n","8n"],
+      mood: ["équilibré et fluide","contemplatif et posé"],
+    },
+  };
 
-  // Détecter la catégorie depuis l'émotion pour injecter la bonne palette
   const detectCategory = (text) => {
     const t = text.toLowerCase();
-    if (/triste|pleur|deuil|perd|perdu|larme|mélanc/.test(t)) return "tristesse";
-    if (/joie|heureux|heureuse|bonheur|rire|fête|content/.test(t)) return "joie";
-    if (/colère|rage|furieux|furie|énerv|fruste/.test(t)) return "colere";
-    if (/peur|anxieux|angoisse|stress|effroi|crainte/.test(t)) return "peur";
-    if (/sérén|calme|paisib|tranquil|zen|doux/.test(t)) return "serenite";
-    if (/amour|aime|tendress|passion|désir|romantique/.test(t)) return "amour";
-    if (/nostalg|souvenir|passé|jadis|enfance|autrefois/.test(t)) return "nostalgie";
+    if (/triste|pleur|deuil|perd|larme|mélanc|chagrin|douleur/.test(t)) return "tristesse";
+    if (/joie|heureux|bonheur|rire|fête|content|euphor|exalt/.test(t)) return "joie";
+    if (/colère|rage|furieux|énerv|fruste|revolt|indigna/.test(t)) return "colere";
+    if (/peur|anxieux|angoisse|stress|effroi|crainte|terreur/.test(t)) return "peur";
+    if (/sérén|calme|paisib|tranquil|zen|apais|repos/.test(t)) return "serenite";
+    if (/amour|aime|tendress|passion|romantique|coeur/.test(t)) return "amour";
+    if (/nostalg|souvenir|passé|enfance|autrefois|lointain/.test(t)) return "nostalgie";
     return "neutre";
   };
 
-  const cat = detectCategory(emotion);
-  const palette = PALETTES[cat] || PALETTES.neutre;
-  const chords = pick(palette.chordSets);
-  const bpm = pick(palette.bpm);
-  const reverbWet = pick(palette.reverbWet);
+  const ALL_SCALES = { ...MAJOR_SCALES, ...MINOR_SCALES };
+  const POSITIVE = ["joie","serenite","amour"];
 
-  const paletteHint = `
-PALETTE IMPOSÉE pour cette émotion (catégorie: ${cat}) :
-- BPM : ${bpm}
-- Accords (dans l'ordre bar 0,2,4,6) : ${JSON.stringify(chords)}
-- Notes de mélodie autorisées : ${JSON.stringify(palette.notes)}
-- melodyOsc : "${palette.melodyOsc}"
-- padOsc : "${palette.padOsc}"
-- melodyAttack : ${palette.melodyAttack}
-- padAttack : ${palette.padAttack}
-- vibratoDepth : ${palette.vibratoDepth}
-- reverbWet : ${reverbWet}
-`;
+  const cat     = detectCategory(emotion);
+  const palette = ALL_SCALES[cat] || MINOR_SCALES.neutre;
+  const key     = pick(palette.keys);
+  const mood    = pick(palette.mood);
+  const bpm     = palette.bpm();
+  const reverbWet = palette.reverbWet();
+  const isPositive = POSITIVE.includes(cat);
+  const [minLen, maxLen] = palette.verseLen;
 
-  const PROMPT = `Tu es un compositeur acoustique. Génère une composition JSON pour l'émotion décrite.
-RÉPONDS UNIQUEMENT AVEC DU JSON VALIDE. Pas de markdown ni backticks.
+  const PROMPT = `Tu es un compositeur. Génère 2 verses mélodiques qui capturent une émotion.
+RÉPONDS UNIQUEMENT AVEC DU JSON VALIDE. Pas de markdown. Seed: ${seed}.
 
-STRUCTURE :
 {
   "category": "${cat}",
-  "title": "titre poétique en français (3-5 mots)",
-  "description": "description poétique en français (1-2 phrases, 20-40 mots)",
+  "mode": "${isPositive ? "majeur" : "mineur"}",
+  "key": "${key.root}",
+  "title": "titre poétique en français (2-4 mots)",
+  "description": "phrase courte et poétique (10-20 mots)",
   "bpm": ${bpm},
-  "chords": [
-    {"bar":0,"notes":${JSON.stringify(chords[0])},"bars":2},
-    {"bar":2,"notes":${JSON.stringify(chords[1])},"bars":2},
-    {"bar":4,"notes":${JSON.stringify(chords[2])},"bars":2},
-    {"bar":6,"notes":${JSON.stringify(chords[3])},"bars":2}
+  "reverbWet": ${reverbWet},
+  "verse1": [
+    {"note":"D4","dur":"4n"},
+    {"note":"F4","dur":"4n."},
+    {"note":"A4","dur":"2n"}
   ],
-  "melody": [GÉNÈRE 24-32 NOTES ICI],
-  "melodyOsc":"${palette.melodyOsc}","melodyAttack":${palette.melodyAttack},"melodyDecay":0.3,"melodySustain":0.6,"melodyRelease":2.2,
-  "melodyDetune":8,"melodyCount":3,
-  "padOsc":"${palette.padOsc}","padAttack":${palette.padAttack},"padRelease":5.0,"padDetune":12,"padCount":4,
-  "vibratoFreq":5.2,"vibratoDepth":${palette.vibratoDepth},
-  "chorusFreq":1.8,"chorusDepth":0.4,"chorusDelayTime":3.5,
-  "reverbDecay":4,"reverbWet":${reverbWet}
+  "verse2": [
+    {"note":"G4","dur":"8n"},
+    {"note":"E4","dur":"4n"},
+    {"note":"C4","dur":"2n."}
+  ]
 }
 
-RÈGLES MÉLODIE :
-- Utilise UNIQUEMENT ces notes : ${JSON.stringify(palette.notes)}
-- 24-32 notes, bar 0-7, beat 0-3, dur: "4n","8n","2n","4n."
-- Phrases expressives avec respirations (silences entre les phrases)
-- Pas de gammes mécaniques — varie les durées et les sauts de notes`;
+RÈGLES STRICTES :
+- Gamme ${isPositive ? "MAJEURE" : "MINEURE"} — utilise UNIQUEMENT ces notes : ${JSON.stringify(key.notes)}
+- Durées autorisées : ${JSON.stringify(palette.durations)}
+- verse1 : ${minLen} à ${maxLen} notes — ${mood} — introduit le thème
+- verse2 : ${minLen} à ${maxLen} notes — répond ou développe le thème de verse1
+- Les 2 verses doivent être différents mais cohérents entre eux
+- Alterne les durées, varie les hauteurs, crée des phrases expressives
+- Pas de gamme mécanique montante ou descendante
+- Seed ${seed} — cette composition doit être UNIQUE`;
 
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -173,37 +189,32 @@ RÈGLES MÉLODIE :
       },
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
-        max_tokens: 2500,
-        temperature: 1.1,
+        max_tokens: 1200,
+        temperature: 1.2,
         messages: [
           { role: "system", content: PROMPT },
-          { role: "user", content: `Compose pour cette émotion : "${emotion}"` }
+          { role: "user", content: `Émotion : "${emotion}" — seed ${seed}` },
         ],
       }),
     });
 
     const text = await response.text();
-    if (!response.ok) {
-      return res.status(500).json({ error: `Groq error ${response.status}: ${text.slice(0, 200)}` });
-    }
+    if (!response.ok) return res.status(500).json({ error: `Groq ${response.status}: ${text.slice(0,200)}` });
 
     let data;
     try { data = JSON.parse(text); }
-    catch (e) { return res.status(500).json({ error: `Réponse Groq invalide: ${text.slice(0, 200)}` }); }
+    catch(e) { return res.status(500).json({ error: `Réponse invalide: ${text.slice(0,200)}` }); }
 
     if (data.error) return res.status(500).json({ error: data.error.message });
-    if (!data.choices?.[0]?.message?.content) {
-      return res.status(500).json({ error: "Réponse vide de Groq" });
-    }
+    if (!data.choices?.[0]?.message?.content) return res.status(500).json({ error: "Réponse vide" });
 
     const raw = data.choices[0].message.content.replace(/```json\n?|```/g, "").trim();
-
     let composition;
     try { composition = JSON.parse(raw); }
-    catch (e) { return res.status(500).json({ error: `JSON invalide: ${raw.slice(0, 200)}` }); }
+    catch(e) { return res.status(500).json({ error: `JSON invalide: ${raw.slice(0,200)}` }); }
 
     return res.status(200).json(composition);
-  } catch (e) {
+  } catch(e) {
     return res.status(500).json({ error: e.message });
   }
 }
