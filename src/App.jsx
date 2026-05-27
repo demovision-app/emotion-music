@@ -5,7 +5,7 @@ const FREE_LIMIT = 3;
 const STORAGE_KEY = "emotion-music-count";
 
 // ↓ Remplace par ton lien Stripe
-const STRIPE_LINK = "https://buy.stripe.com/XXXXXXXX";
+const STRIPE_LINK = "https://buy.stripe.com/00w14g0BP99lcwydDQ2Ji0m";
 
 const PAL = {
   tristesse: { bg:"#07101d", mid:"#0d2137", accent:"#4a90d9", glow:"74,144,217", text:"#93c5fd", sub:"rgba(74,144,217,0.08)" },
